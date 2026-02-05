@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horse Racing Scream Game 🐴🎉</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/style.css">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+    <div id="ui-overlay">
+      <!-- Start Screen -->
+      <div id="start-screen" class="screen">
+        <div class="lantern lantern-left"></div>
+        <div class="lantern lantern-right"></div>
+        <h1 class="title">🏇 SCREAM RACE 🏇</h1>
+        <p class="subtitle">Year of the Horse Edition</p>
+        <div class="instructions">
+          <p>🎤 SCREAM as loud as you can!</p>
+          <p>⏱️ Keep screaming to keep running!</p>
+          <p>🛑 Stop screaming = GAME OVER!</p>
+        </div>
+        <div class="mode-toggle">
+          <label class="toggle-label">
+            <input type="checkbox" id="flying-mode-toggle">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">🦅 Flying Challenge Mode</span>
+          </label>
+          <p class="mode-hint">Fly high to dodge obstacles!</p>
+        </div>
+        <button id="start-btn" class="pixel-btn">
+          <span class="btn-icon">🎙️</span>
+          <span>ENABLE MIC & START</span>
+        </button>
+        <p class="hint">Microphone permission required</p>
+      </div>
+
+      <!-- HUD (shown during gameplay) -->
+      <div id="hud" class="hidden">
+        <div class="hud-top">
+          <div class="timer-container">
+            <span class="hud-label">⏱️ SCREAM TIME</span>
+            <span id="timer-value" class="timer-value">00:00.00</span>
+          </div>
+          <div class="distance-container">
+            <span class="hud-label">🏃 DISTANCE</span>
+            <span id="distance-value" class="distance-value">0m</span>
+          </div>
+        </div>
+        <div class="hud-bottom">
+          <div id="scream-indicator" class="scream-indicator">🔇 SCREAM NOW!</div>
+          <div class="volume-meter">
+            <span class="volume-label">🎤</span>
+            <div class="volume-bar">
+              <div id="volume-fill" class="volume-fill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Over Screen -->
+      <div id="game-over-screen" class="screen hidden">
+        <div class="lantern lantern-left"></div>
+        <div class="lantern lantern-right"></div>
+        <h1 class="game-over-title">YOU STOPPED!</h1>
+        <div class="final-scores">
+          <div class="score-box">
+            <p class="score-label">⏱️ SCREAM TIME</p>
+            <p id="final-time" class="score-value">00:00.00</p>
+          </div>
+          <div class="score-box">
+            <p class="score-label">🏃 DISTANCE</p>
+            <p id="final-distance" class="score-value">0m</p>
+          </div>
+        </div>
+        <p class="encouragement">Can you scream longer? 🐴🔊</p>
+        <button id="restart-btn" class="pixel-btn">
+          <span>SCREAM AGAIN!</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
