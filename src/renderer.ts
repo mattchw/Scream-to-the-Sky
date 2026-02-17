@@ -89,13 +89,13 @@ export class Renderer {
   /**
    * Render the complete scene
    */
-  render(horse: Horse, _time: number, distance: number = 0, obstacleManager?: ObstacleManager, deltaTime: number = 16, flyingChallengeMode: boolean = false): void {
+  render(horse: Horse, _time: number, distance: number = 0, obstacleManager?: ObstacleManager, deltaTime: number = 16, obstaclesEnabled: boolean = false): void {
     this.clear();
     
     // Draw scrolling background with transition based on distance
     this.drawBackground(distance);
     
-    // Draw obstacles (behind horse when flying, in front when running)
+    // Draw obstacles
     if (obstacleManager) {
       obstacleManager.draw(this.ctx);
     }
@@ -103,8 +103,8 @@ export class Renderer {
     // Draw the horse
     horse.draw(this.ctx);
     
-    // Draw warning text before obstacles start (only in flying challenge mode)
-    if (flyingChallengeMode) {
+    // Draw warning text before obstacles start (only when obstacles are on)
+    if (obstaclesEnabled) {
       this.drawWarning(distance, deltaTime);
     }
   }

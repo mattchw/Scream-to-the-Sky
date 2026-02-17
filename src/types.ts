@@ -8,14 +8,15 @@ export interface GameState {
   volumeLevel: number;
   screamTime: number;        // Time spent screaming in seconds
   isScreaming: boolean;      // Currently screaming
-  flyingChallengeMode: boolean;  // Flying challenge with obstacles
+  flyingMode: boolean;       // Horse transitions to Pegasus at 5000m
+  obstaclesEnabled: boolean; // Spawn obstacles (only works with flying mode)
 }
 
 // ===== Game Configuration Interface =====
 export interface GameConfig {
   baseSpeed: number;
   maxSpeedBoost: number;
-  volumeThreshold: number;   // Minimum volume to count as screaming
+  volumeThreshold: number;   // 0–1 normalised volume needed to count as screaming
   silenceGracePeriod: number; // Seconds of silence before game over
 }
 

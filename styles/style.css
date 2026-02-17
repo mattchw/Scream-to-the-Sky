@@ -245,10 +245,21 @@ body {
   margin-top: 15px;
 }
 
-/* ===== Mode Toggle ===== */
-.mode-toggle {
+/* ===== Mode Toggles ===== */
+.mode-toggles {
   margin-bottom: 20px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mode-toggle {
+  text-align: center;
+}
+
+.obstacle-toggle {
+  padding-left: 20px;
 }
 
 .toggle-label {

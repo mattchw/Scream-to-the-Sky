@@ -22,7 +22,7 @@ export class Game {
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
   private silenceTimer: number = 0;  // Track how long player has been silent
-  
+
   // Pitch tracking for flying horse
   private referencePitch: number = 0;      // Reference pitch captured before flying
   private currentPitch: number = 0;        // Current detected pitch
@@ -58,8 +58,20 @@ export class Game {
       volumeLevel: 0,
       screamTime: 0,
       isScreaming: false,
-      flyingChallengeMode: false,
+      flyingMode: false,
+      obstaclesEnabled: false,
     };
+  }
+
+  /**
+   * Read toggle states from the DOM
+   */
+  private readToggles(): { flyingMode: boolean; obstaclesEnabled: boolean } {
+    const flyingToggle = document.getElementById('flying-mode-toggle') as HTMLInputElement;
+    const obstaclesToggle = document.getElementById('obstacles-toggle') as HTMLInputElement;
+    const flyingMode = flyingToggle?.checked ?? false;
+    const obstaclesEnabled = flyingMode && (obstaclesToggle?.checked ?? false);
+    return { flyingMode, obstaclesEnabled };
   }
 
   /**
@@ -75,7 +87,7 @@ export class Game {
   async start(): Promise<boolean> {
     // Request microphone access
     const micEnabled = await this.audioManager.requestMicrophoneAccess();
-    
+
     if (!micEnabled) {
       alert('Microphone access is required to play! Please allow microphone access and try again.');
       return false;
@@ -84,19 +96,18 @@ export class Game {
     // Resume audio context (required by browsers after user interaction)
     await this.audioManager.resume();
 
-    // Check flying challenge mode toggle
-    const flyingModeToggle = document.getElementById('flying-mode-toggle') as HTMLInputElement;
-    const flyingChallengeMode = flyingModeToggle?.checked ?? false;
+    const { flyingMode, obstaclesEnabled } = this.readToggles();
 
     // Reset game state
     this.state = this.getInitialState();
     this.state.isRunning = true;
-    this.state.flyingChallengeMode = flyingChallengeMode;
+    this.state.flyingMode = flyingMode;
+    this.state.obstaclesEnabled = obstaclesEnabled;
     this.silenceTimer = 0;
     this.referencePitch = 0;
     this.currentPitch = 0;
     this.horse.reset();
-    this.horse.setFlyingModeEnabled(flyingChallengeMode);
+    this.horse.setFlyingModeEnabled(flyingMode);
     this.renderer.reset();
     this.obstacleManager.reset();
 
@@ -140,12 +151,11 @@ export class Game {
 
     // Get current volume level from microphone
     this.state.volumeLevel = this.audioManager.getVolumeLevel();
-    
+
     // Get current pitch for flying horse control
     this.currentPitch = this.audioManager.getPitch();
 
     // Check if currently screaming
-    const wasScreaming = this.state.isScreaming;
     this.state.isScreaming = this.state.volumeLevel > GAME_CONFIG.volumeThreshold;
 
     // Update scream time and silence detection
@@ -156,27 +166,28 @@ export class Game {
       this.state.screamTime += deltaSeconds;
       // Calculate speed based on volume
       this.updateSpeed();
-      
+
+      console.log('currentPitch', this.currentPitch);
+      console.log('referencePitch', this.referencePitch);
+
       // Capture reference pitch just before flying starts (around 4500m-5000m)
-      // Only if flying challenge mode is enabled
-      if (this.state.flyingChallengeMode &&
-          this.state.distance >= this.PITCH_CAPTURE_DISTANCE && 
-          this.state.distance < 5000 && 
-          this.currentPitch > 0) {
-        // Keep updating reference pitch until we hit 5000m
-        // This captures the player's "natural" screaming pitch
+      // Only if flying mode is enabled
+      if (this.state.flyingMode &&
+        this.state.distance >= this.PITCH_CAPTURE_DISTANCE &&
+        this.state.distance < 5000 &&
+        this.currentPitch > 0) {
         this.referencePitch = this.currentPitch;
       }
     } else {
       // Track silence duration
       this.silenceTimer += deltaSeconds;
-      
+
       // Game over if silent for too long (with grace period)
       if (this.silenceTimer >= GAME_CONFIG.silenceGracePeriod && this.state.screamTime > 0) {
         this.gameOver();
         return;
       }
-      
+
       // Slow down when not screaming
       this.state.speed = Math.max(0, this.state.speed - 200 * deltaSeconds);
     }
@@ -186,15 +197,15 @@ export class Game {
 
     // Update horse animation (pass distance and pitch for flying transition)
     this.horse.update(
-      deltaTime, 
-      this.state.speed, 
+      deltaTime,
+      this.state.speed,
       this.state.distance,
       this.currentPitch,
       this.referencePitch
     );
 
-    // Update obstacles (only in flying challenge mode)
-    if (this.state.flyingChallengeMode) {
+    // Update obstacles (only when obstacles toggle is on)
+    if (this.state.obstaclesEnabled) {
       this.obstacleManager.update(this.state.distance, this.state.speed, deltaTime);
 
       // Check for collision with obstacles
@@ -216,14 +227,11 @@ export class Game {
    * Calculate current speed based on volume level
    */
   private updateSpeed(): void {
-    const volumeLevel = this.state.volumeLevel;
-    
-    // Normalize volume above threshold
-    const normalizedVolume = (volumeLevel - GAME_CONFIG.volumeThreshold) / (1 - GAME_CONFIG.volumeThreshold);
-    
-    // Calculate speed - louder = faster!
-    const speedBoost = normalizedVolume * GAME_CONFIG.maxSpeedBoost;
-    this.state.speed = GAME_CONFIG.baseSpeed + speedBoost;
+    // volumeLevel is already 0–1 (mapped from mic min/max in AudioManager)
+    const above = this.state.volumeLevel - GAME_CONFIG.volumeThreshold;
+    const normalised = Math.max(0, above) / (1 - GAME_CONFIG.volumeThreshold);
+
+    this.state.speed = GAME_CONFIG.baseSpeed + normalised * GAME_CONFIG.maxSpeedBoost;
   }
 
   /**
@@ -231,12 +239,12 @@ export class Game {
    */
   private render(time: number, deltaTime: number): void {
     this.renderer.render(
-      this.horse, 
-      time, 
-      this.state.distance, 
-      this.state.flyingChallengeMode ? this.obstacleManager : undefined, 
+      this.horse,
+      time,
+      this.state.distance,
+      this.state.obstaclesEnabled ? this.obstacleManager : undefined,
       deltaTime,
-      this.state.flyingChallengeMode
+      this.state.obstaclesEnabled
     );
   }
 
@@ -267,19 +275,18 @@ export class Game {
    * Restart the game
    */
   restart(): void {
-    // Check flying challenge mode toggle
-    const flyingModeToggle = document.getElementById('flying-mode-toggle') as HTMLInputElement;
-    const flyingChallengeMode = flyingModeToggle?.checked ?? false;
+    const { flyingMode, obstaclesEnabled } = this.readToggles();
 
     // Reset state
     this.state = this.getInitialState();
     this.state.isRunning = true;
-    this.state.flyingChallengeMode = flyingChallengeMode;
+    this.state.flyingMode = flyingMode;
+    this.state.obstaclesEnabled = obstaclesEnabled;
     this.silenceTimer = 0;
     this.referencePitch = 0;
     this.currentPitch = 0;
     this.horse.reset();
-    this.horse.setFlyingModeEnabled(flyingChallengeMode);
+    this.horse.setFlyingModeEnabled(flyingMode);
     this.renderer.reset();
     this.obstacleManager.reset();
 

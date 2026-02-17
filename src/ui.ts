@@ -83,6 +83,22 @@ export class UIManager {
         }
       }
     });
+
+    // Flying mode toggle → show/hide obstacles sub-toggle
+    const flyingToggle = document.getElementById('flying-mode-toggle') as HTMLInputElement;
+    const obstacleContainer = document.getElementById('obstacle-toggle-container');
+    if (flyingToggle && obstacleContainer) {
+      flyingToggle.addEventListener('change', () => {
+        if (flyingToggle.checked) {
+          obstacleContainer.classList.remove('hidden');
+        } else {
+          obstacleContainer.classList.add('hidden');
+          // Uncheck obstacles when flying mode is turned off
+          const obstaclesToggle = document.getElementById('obstacles-toggle') as HTMLInputElement;
+          if (obstaclesToggle) obstaclesToggle.checked = false;
+        }
+      });
+    }
   }
 
   /**

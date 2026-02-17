@@ -24,13 +24,23 @@
           <p>⏱️ Keep screaming to keep running!</p>
           <p>🛑 Stop screaming = GAME OVER!</p>
         </div>
-        <div class="mode-toggle">
-          <label class="toggle-label">
-            <input type="checkbox" id="flying-mode-toggle">
-            <span class="toggle-slider"></span>
-            <span class="toggle-text">🦅 Flying Challenge Mode</span>
-          </label>
-          <p class="mode-hint">Fly high to dodge obstacles!</p>
+        <div class="mode-toggles">
+          <div class="mode-toggle">
+            <label class="toggle-label">
+              <input type="checkbox" id="flying-mode-toggle">
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">🦅 Flying Mode</span>
+            </label>
+            <p class="mode-hint">Horse transforms into Pegasus at 5000m!</p>
+          </div>
+          <div class="mode-toggle obstacle-toggle hidden" id="obstacle-toggle-container">
+            <label class="toggle-label">
+              <input type="checkbox" id="obstacles-toggle">
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">🪨 Obstacles</span>
+            </label>
+            <p class="mode-hint">Dodge obstacles by changing your pitch!</p>
+          </div>
         </div>
         <button id="start-btn" class="pixel-btn">
           <span class="btn-icon">🎙️</span>

@@ -9,9 +9,21 @@ export const CANVAS_DIMENSIONS: Dimensions = {
 // ===== Game Configuration =====
 export const GAME_CONFIG: GameConfig = {
   baseSpeed: 10,             // Base pixels per second (minimum running speed)
-  maxSpeedBoost: 1000,        // Max additional speed from screaming louder
-  volumeThreshold: 0.05,     // Higher threshold to filter background noise
-  silenceGracePeriod: 0.3,   // 300ms grace period before game over
+  maxSpeedBoost: 1000,       // Max additional speed from screaming louder
+  volumeThreshold: 0.3,    // 0–1 normalised volume needed to count as screaming
+  // ↑ Lower this if the horse won't start; raise if it runs on silence
+  silenceGracePeriod: 0.05,     // Seconds of silence before game over
+};
+
+// ===== Audio Configuration =====
+// Adjust minVolume / maxVolume to match YOUR microphone.
+//   minVolume  = the raw level you see in silence  (raise if bar sits above 0% when quiet)
+//   maxVolume  = the raw level when you scream hard (lower if bar never reaches 100%)
+export const AUDIO_CONFIG = {
+  fftSize: 2048,             // Larger FFT = better pitch resolution (was 256, ~187 Hz/bin; now ~23 Hz/bin)
+  smoothingTimeConstant: 0.7,
+  minVolume: 0.1,           // Raw volume floor  (silence)
+  maxVolume: 0.25,           // Raw volume ceiling (loud scream)
 };
 
 // ===== Color Palette - Chinese New Year Theme =====
@@ -23,7 +35,7 @@ export const COLORS: ColorPalette = {
   goldPrimary: '#F4A300',
   goldLight: '#FFD700',
   goldDark: '#B8860B',
-  
+
   // Neutral Colors
   cream: '#F5E6C8',
   creamDark: '#E8D4B0',
@@ -31,7 +43,7 @@ export const COLORS: ColorPalette = {
   brownDark: '#3E2723',
   black: '#1A1A1A',
   white: '#FEFEFE',
-  
+
   // Background Colors
   sky: '#87CEEB',
   skyLight: '#B0E0E6',
@@ -64,14 +76,6 @@ export const PARALLAX_SPEEDS = {
 export const UI_CONFIG = {
   volumeMeterWidth: 120,
   volumeMeterHeight: 12,
-};
-
-// ===== Audio Configuration =====
-export const AUDIO_CONFIG = {
-  fftSize: 256,
-  smoothingTimeConstant: 0.8,
-  minDecibels: -90,
-  maxDecibels: -10,
 };
 
 // ===== Animation Timing =====

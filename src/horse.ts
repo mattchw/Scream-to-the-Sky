@@ -12,39 +12,39 @@ export class Horse {
   private currentFrame: number = 0;
   private frameTimer: number = 0;
   private animationSpeed: number = HORSE_CONFIG.baseAnimationSpeed;
-  
+
   // Running sprite sheet
   private spriteSheet: HTMLImageElement;
   private spriteLoaded: boolean = false;
-  
+
   // Flying sprite sheet
   private flyingSpriteSheet: HTMLImageElement;
   private flyingSpriteLoaded: boolean = false;
   private flyingFrameWidth: number = 0;
   private flyingFrameHeight: number = 0;
-  
+
   // Sprite sheet layout: 2 columns x 3 rows = 6 frames
   private readonly cols = 2;
   private readonly rows = 3;
   private readonly totalFrames = 6;
-  
+
   // Each frame dimensions (will be calculated after image loads)
   private frameWidth: number = 0;
   private frameHeight: number = 0;
-  
+
   // Display scale
   private readonly scale = 1;
-  
+
   // Transition settings
   private readonly TRANSITION_START = 5000;  // Start transition at 5000m
   private readonly TRANSITION_DURATION = 500; // Over 500m
   private readonly BASE_FLY_HEIGHT = 0;      // Base height when flying
-  private readonly MAX_PITCH_HEIGHT = 500;    // Max extra height from high pitch
+  private readonly MAX_PITCH_HEIGHT = 400;   // Max height above neutral when pitch is high
   private currentDistance: number = 0;
-  
+
   // Flying challenge mode (off by default)
   private flyingModeEnabled: boolean = false;
-  
+
   // Pitch-based flying height
   private currentPitchHeight: number = 0;     // Current extra height from pitch
   private targetPitchHeight: number = 0;      // Target height (smoothed)
@@ -52,7 +52,7 @@ export class Horse {
   constructor() {
     this.x = 50;
     this.y = HORSE_CONFIG.groundY;
-    
+
     // Load running sprite sheet
     this.spriteSheet = new Image();
     this.spriteSheet.onload = () => {
@@ -64,7 +64,7 @@ export class Horse {
       this.y = HORSE_CONFIG.groundY - (this.frameHeight * this.scale);
     };
     this.spriteSheet.src = '/horse-sprite.png';
-    
+
     // Load flying sprite sheet
     this.flyingSpriteSheet = new Image();
     this.flyingSpriteSheet.onload = () => {
@@ -101,15 +101,15 @@ export class Horse {
   }
 
   update(
-    deltaTime: number, 
-    speed: number, 
+    deltaTime: number,
+    speed: number,
     distance: number = 0,
     currentPitch: number = 0,
     referencePitch: number = 0
   ): void {
     // Track current distance for sprite transition
     this.currentDistance = distance;
-    
+
     // Only animate when moving (speed > 0)
     if (speed > 0) {
       // Calculate animation speed based on movement speed
@@ -135,30 +135,19 @@ export class Horse {
 
     // Calculate flying transition progress
     const flyProgress = this.getTransitionProgress();
-    
-    // Calculate pitch-based height when flying
+
+    // Pitch controls flying height: high pitch = fly higher, low pitch = fly lower
     if (flyProgress > 0 && referencePitch > 0 && currentPitch > 0) {
-      // Calculate how much higher the current pitch is compared to reference
+      // Reference pitch = neutral height. Difference from reference maps to up/down.
       const pitchRatio = currentPitch / referencePitch;
-      
-      // If pitch is higher than reference, fly higher (up to MAX_PITCH_HEIGHT extra)
-      // pitchRatio of 1.0 = same pitch = no extra height
-      // pitchRatio of 2.0 = double the pitch = max extra height
-      if (pitchRatio > 1) {
-        const extraHeight = Math.min(this.MAX_PITCH_HEIGHT, (pitchRatio - 1) * this.MAX_PITCH_HEIGHT);
-        this.targetPitchHeight = extraHeight;
-      } else {
-        this.targetPitchHeight = 0;
-      }
-      
-      // Smooth the height change for natural movement
-      const smoothing = deltaTime * 0.005;  // Adjust for smooth transition
+      const rawOffset = (pitchRatio - 1) * this.MAX_PITCH_HEIGHT;
+      this.targetPitchHeight = Math.max(0, Math.min(this.MAX_PITCH_HEIGHT, rawOffset));
+      const smoothing = deltaTime * 0.005;
       this.currentPitchHeight += (this.targetPitchHeight - this.currentPitchHeight) * smoothing;
     } else {
-      // Gradually return to base height when not flying or no pitch detected
-      this.currentPitchHeight *= 0.95;
+      this.currentPitchHeight += (0 - this.currentPitchHeight) * (deltaTime * 0.005);
     }
-    
+
     // Calculate Y position - horse rises when transitioning to flying
     if (this.spriteLoaded) {
       const baseY = HORSE_CONFIG.groundY - (this.frameHeight * this.scale);
@@ -167,7 +156,7 @@ export class Horse {
       this.y = baseY - baseFlyOffset - pitchFlyOffset;
     }
   }
-  
+
   /**
    * Get the transition progress from running to flying (0 to 1)
    * Returns 0 if flying mode is disabled
@@ -191,10 +180,10 @@ export class Horse {
     // Layout: 2 columns x 3 rows, reading top-to-bottom, then left-to-right
     const row = this.currentFrame % this.rows;
     const col = Math.floor(this.currentFrame / this.rows);
-    
+
     const sourceX = col * this.frameWidth;
     const sourceY = row * this.frameHeight;
-    
+
     const destWidth = this.frameWidth * this.scale;
     const destHeight = this.frameHeight * this.scale;
 
@@ -202,7 +191,7 @@ export class Horse {
     const flyProgress = this.getTransitionProgress();
 
     ctx.save();
-    
+
     // Draw running horse (fading out during transition)
     if (flyProgress < 1) {
       ctx.globalAlpha = 1 - flyProgress;
@@ -214,16 +203,16 @@ export class Horse {
         destWidth, destHeight
       );
     }
-    
+
     // Draw flying horse (fading in during transition)
     if (flyProgress > 0 && this.flyingSpriteLoaded) {
       ctx.globalAlpha = flyProgress;
-      
+
       const flySourceX = col * this.flyingFrameWidth;
       const flySourceY = row * this.flyingFrameHeight;
       const flyDestWidth = this.flyingFrameWidth * this.scale;
       const flyDestHeight = this.flyingFrameHeight * this.scale;
-      
+
       ctx.drawImage(
         this.flyingSpriteSheet,
         flySourceX, flySourceY,
@@ -232,7 +221,7 @@ export class Horse {
         flyDestWidth, flyDestHeight
       );
     }
-    
+
     ctx.restore();
   }
 
